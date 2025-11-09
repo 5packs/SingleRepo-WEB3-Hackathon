@@ -999,7 +999,7 @@ def main():
     optimizer.save_optimal_parameters("optimal_sma_parameters.json")
     
     # Generate portfolio allocation for $49,000 investment
-    optimizer.save_portfolio_allocation(30000, "portfolio_allocation.json")
+    optimizer.save_portfolio_allocation(49000, "portfolio_allocation.json")
     
     # Step 7: Implementation guide
     if profitable_cryptos:
