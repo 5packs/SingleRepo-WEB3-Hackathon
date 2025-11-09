@@ -22,10 +22,7 @@ The trading bot continuously monitors your Roostoo account balance by running `t
 
 2. **Run the bot:**
    ```cmd
-   # Easy way:
-   start_monitor.bat
-   
-   # Or from project root:
+   # From project root:
    .venv\Scripts\python.exe trading-bot\monitor_bot.py
    ```
 
