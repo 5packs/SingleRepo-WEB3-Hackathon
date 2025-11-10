@@ -624,7 +624,11 @@ class MultiCryptoOptimizer:
         
     def save_portfolio_allocation(self, initial_investment: float = 49000, filename: str = "portfolio_allocation.json"):
         """
-        Generate optimal portfolio allocation with risk-reward optimization.
+        Generate optimal portfolio allocation optimized for competition judging criteria.
+        
+        Competition Scoring:
+        - Portfolio Return (absolute returns)
+        - Risk Adjusted Return: 0.4*Sortino + 0.3*Calmar + 0.3*Sharpe
         
         Args:
             initial_investment: Total amount to invest (default: $49,000)
@@ -640,14 +644,13 @@ class MultiCryptoOptimizer:
         os.makedirs(main_output_dir, exist_ok=True)
         filepath = os.path.join(main_output_dir, filename)
         
-        # Filter profitable cryptocurrencies (positive returns)
+        # Include all cryptocurrencies regardless of profitability
         profitable_results = {
             symbol: result for symbol, result in self.results.items()
-            if result.return_pct > 0 and result.sharpe_ratio > 0
         }
         
         if not profitable_results:
-            print("[WARNING] No profitable cryptocurrencies found for portfolio allocation")
+            print("[WARNING] No optimization results available for portfolio allocation")
             return
             
         # Calculate risk-adjusted scores for each cryptocurrency
@@ -655,17 +658,28 @@ class MultiCryptoOptimizer:
         total_score = 0
         
         for symbol, result in profitable_results.items():
-            # Risk-adjusted score: Return + Sharpe bonus - Drawdown penalty
-            return_score = max(0, result.return_pct)
-            sharpe_bonus = max(0, result.sharpe_ratio) * 3  # Weight Sharpe ratio heavily
-            drawdown_penalty = abs(result.max_drawdown) * 0.5  # Penalize high drawdown
+            # Base score for all cryptocurrencies to ensure allocation
+            base_score = 1.0  # Minimum baseline score for all currencies
             
-            # Bonus for tier 1 and tier 2 cryptocurrencies (more stable)
+            # Use the EXACT competition scoring formula for risk-adjusted return
+            competition_risk_score = self.calculate_composite_risk_score(result)
+            
+            # Portfolio return component (positive bias for returns)
+            return_score = max(0, result.return_pct)
+            
+            # Tier bonus for stability (extra weight for established cryptocurrencies)
             tier = self.get_crypto_tier(symbol)
             tier_bonus = 2 if tier == 'tier_1' else 1 if tier == 'tier_2' else 0
             
-            score = return_score + sharpe_bonus - drawdown_penalty + tier_bonus
-            scores[symbol] = max(0, score)  # Ensure non-negative scores
+            # Final score: Base + Competition Risk Score + Return + Tier Bonus
+            # This aligns with competition judging: Portfolio Return + Risk Adjusted Return
+            performance_score = (return_score * 0.3 +  # Portfolio return component (30%)
+                               competition_risk_score * 0.6 +  # Risk-adjusted return (60% - primary focus)
+                               tier_bonus * 0.1)  # Stability bonus (10%)
+            
+            score = base_score + max(0, performance_score)  # Baseline + performance bonus
+            
+            scores[symbol] = score  # All scores are guaranteed to be positive
             total_score += scores[symbol]
         
         if total_score == 0:
