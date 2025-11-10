@@ -634,15 +634,22 @@ class MultiCryptoOptimizer:
             initial_investment: Total amount to invest (default: $49,000)
             filename: Output filename for portfolio allocation
         """
-        if not self.results:
-            print("[WARNING] No optimization results available to generate portfolio")
-            return
-            
         # Save to output directory in main project folder
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         main_output_dir = os.path.join(project_root, "output")
         os.makedirs(main_output_dir, exist_ok=True)
         filepath = os.path.join(main_output_dir, filename)
+        
+        # Check if force_currency_allocation.json exists and use it instead of calculating
+        force_allocation_path = os.path.join(main_output_dir, "force_currency_allocation.json")
+        if os.path.exists(force_allocation_path):
+            print(f"[INFO] Found force_currency_allocation.json - using forced allocation instead of calculating")
+            self._use_forced_allocation(force_allocation_path, filepath, main_output_dir, initial_investment)
+            return
+        
+        if not self.results:
+            print("[WARNING] No optimization results available to generate portfolio")
+            return
         
         # Include all cryptocurrencies regardless of profitability
         profitable_results = {
@@ -854,6 +861,89 @@ class MultiCryptoOptimizer:
             print(f"Minimal simple allocation saved to {minimal_path}")
         except Exception as e:
             print(f"[WARNING] Failed to write minimal simple allocation: {e}")
+    
+    def _use_forced_allocation(self, force_allocation_path: str, filepath: str, main_output_dir: str, initial_investment: float):
+        """
+        Use the forced allocation file as the portfolio allocation and copy to other required files.
+        
+        Args:
+            force_allocation_path: Path to force_currency_allocation.json
+            filepath: Path where portfolio_allocation.json should be saved
+            main_output_dir: Output directory path
+            initial_investment: Total investment amount
+        """
+        try:
+            # Load the forced allocation
+            with open(force_allocation_path, 'r') as f:
+                forced_allocations = json.load(f)
+            
+            print(f"[INFO] Loaded forced allocation with {len(forced_allocations)} currencies")
+            
+            # Create portfolio allocation structure
+            allocations = {}
+            total_allocated = 0
+            
+            for symbol, amount in forced_allocations.items():
+                percentage = (amount / initial_investment) * 100
+                
+                # Get competition risk score if available, otherwise use default
+                competition_risk_score = 0
+                if symbol in self.results:
+                    competition_risk_score = self.calculate_composite_risk_score(self.results[symbol])
+                
+                allocations[symbol] = {
+                    "allocation_amount": round(amount, 2),
+                    "percentage": round(percentage, 2),
+                    "score": round(1.0 + max(0, competition_risk_score), 2)  # Base score + risk score
+                }
+                total_allocated += amount
+            
+            # Create full portfolio allocation data
+            portfolio_data = {
+                "total_investment": initial_investment,
+                "total_allocated": round(total_allocated, 2),
+                "remaining_cash": round(initial_investment - total_allocated, 2),
+                "allocations": allocations,
+                "allocation_method": "forced_allocation",
+                "source_file": "force_currency_allocation.json"
+            }
+            
+            # Save portfolio allocation
+            with open(filepath, 'w') as f:
+                json.dump(portfolio_data, f, indent=2)
+            
+            # Create simple portfolio allocation
+            simple_allocation = {symbol: allocation["allocation_amount"] for symbol, allocation in allocations.items()}
+            simple_path = os.path.join(main_output_dir, "simple_portfolio_allocation.json")
+            with open(simple_path, 'w') as f:
+                json.dump(simple_allocation, f, indent=2)
+            
+            # Create simple format with summary
+            simple_portfolio_data = {
+                "summary": {
+                    "total_investment": initial_investment,
+                    "total_allocated": round(total_allocated, 2),
+                    "remaining_cash": round(initial_investment - total_allocated, 2),
+                    "number_of_coins": len(allocations)
+                },
+                "allocations": simple_allocation
+            }
+            
+            simple_filename = filepath.replace('.json', '_simple.json')
+            with open(simple_filename, 'w') as f:
+                json.dump(simple_portfolio_data, f, indent=2)
+            
+            print(f"✅ Forced portfolio allocation applied:")
+            print(f"   📄 Portfolio allocation saved to {filepath}")
+            print(f"   📄 Simple allocation saved to {simple_path}")
+            print(f"   📄 Simple allocation with summary saved to {simple_filename}")
+            print(f"   💰 ${initial_investment:,.0f} allocated across {len(allocations)} cryptocurrencies")
+            print(f"   💸 Total allocated: ${total_allocated:,.2f}")
+            print(f"   🏦 Remaining cash: ${initial_investment - total_allocated:,.2f}")
+            
+        except Exception as e:
+            print(f"[ERROR] Failed to process forced allocation: {e}")
+            print(f"[INFO] Falling back to normal portfolio calculation")
         
     def _get_portfolio_risk_level(self, weighted_drawdown: float) -> str:
         """Classify portfolio risk level based on weighted maximum drawdown."""
