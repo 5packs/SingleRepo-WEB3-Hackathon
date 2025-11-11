@@ -997,7 +997,7 @@ def main():
         print(f"   {i}. {name} - {count} cryptos from {tiers}")
     
     # Use aggressive strategy by default (can be modified)
-    selected_strategy = 1
+    selected_strategy = 0
     strategy_name, crypto_count, include_tiers = strategies[selected_strategy]
     
     print(f"\nUsing: {strategy_name}")
@@ -1103,7 +1103,7 @@ def main():
     optimizer.save_optimal_parameters("optimal_sma_parameters.json")
     
     # Generate portfolio allocation for $49,000 investment
-    optimizer.save_portfolio_allocation(49000, "portfolio_allocation.json")
+    optimizer.save_portfolio_allocation(48000, "portfolio_allocation.json")
     
     # Step 7: Implementation guide
     if profitable_cryptos:
