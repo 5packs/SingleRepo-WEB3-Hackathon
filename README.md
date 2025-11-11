@@ -7,7 +7,7 @@ A comprehensive cryptocurrency trading and analysis system built for Web3 hackat
 This project consists of three main modules that work together to provide a complete cryptocurrency trading ecosystem:
 
 - **🔗 Crypto Roostoo API**: Interface with the Roostoo cryptocurrency exchange
-- **📊 SMA Prediction**: Advanced trading strategy optimization using Simple Moving Averages
+- **📊 Regime detection**: Advanced trading strategy optimization using Simple Moving Averages and Mean Reversion depending on detected regime
 - **🤖 Trading Bot**: Automated monitoring and trading execution
 
 ## 🏗️ Project Structure
@@ -42,9 +42,9 @@ SingleRepo-WEB3-Hackathon/
 - **Market Data**: Real-time ticker information and exchange details
 - **Security**: HMAC-SHA256 signed requests for secure API communication
 
-### 📈 SMA Trading Strategy Optimization
+### 📈 Regime Detection Strategy Optimization
 - **Multi-Cryptocurrency Analysis**: Optimize strategies for 24+ cryptocurrencies
-- **Parameter Optimization**: Grid search for optimal SMA periods (5-80 periods)
+- **Parameter Optimization**: Grid search for optimal SMA periods (5-80 periods) and Mean Reversion Parameters
 - **Portfolio Allocation**: Intelligent capital distribution based on performance
 - **Risk Management**: Sharpe ratio and maximum drawdown analysis
 - **Backtesting**: Historical performance validation with detailed metrics
@@ -111,7 +111,7 @@ The system supports analysis and trading for 24+ major cryptocurrencies:
 
 ## 🎯 Key Algorithms
 
-### SMA Strategy Optimization
+### Regime Detection Optimization
 - **Grid Search**: Tests 56+ parameter combinations per cryptocurrency
 - **Performance Metrics**: Return %, Sharpe ratio, maximum drawdown
 - **Portfolio Allocation**: Risk-adjusted capital distribution
@@ -157,7 +157,7 @@ The system generates several analysis files in the `output/` directory:
 
 For questions, issues, or contributions, please refer to the individual module READMEs:
 - [Trading Bot README](trading-bot/README.md)
-- [SMA Optimizer Documentation](sma-prediction/multi_crypto_optimizer_explained.md)
+- [Regime Detection Documentation](sma-prediction/multi_crypto_optimizer_explained.md)
 
 ## ⚠️ Disclaimer
 
